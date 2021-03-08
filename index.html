@@ -1,0 +1,369 @@
+
+<style>
+
+html, body {
+ font-family: calibri;
+}
+
+.inline-code {
+ background-color: #ddd;
+ padding: 3px;
+ font-family: monospace;
+ margin: 1px;
+ border: 1px solid transparent;
+}
+
+/* minimal */
+.table {
+ display: table;
+ margin: 5px;
+}
+.row {
+ display: table-row-group;
+}
+.cell {
+ display: table-cell;
+}
+
+/* borders + padding */ 
+
+.cell {
+ border-bottom: 1px solid #999;
+ border-right: 1px solid #999;
+}
+
+.row:nth-child(1) .cell {
+ border-top: 1px solid #999;
+}
+
+.cell:nth-child(1) {
+ border-left: 1px solid #999;
+}
+
+/* vertically center cell child-div */ 
+.cell {
+ vertical-align: middle;
+}
+.inner {
+  display: inline-block;
+  padding: 5px;
+}
+
+.cell {
+ height: 40px;
+ min-width: 51px;
+}
+
+
+.ORDER-RECEIPT {
+ background-color: ecf9ec; /* #fcf; */
+}
+.ORDER-REVIEW {
+ background-color: c8eac8; /* ffb3ff; */
+}
+.PRODUCTION-PLANNING {
+ background-color: a3dca3; /* ffe6b3; */
+}
+.PRODUCTION {
+ background-color: ffd480;
+}
+.SHIPPING {
+ background-color: 99c2ff;
+}
+.SHIPPING-BUFFER {
+ background-color: #cce0ff;
+}
+
+.cell:hover {
+ cursor: pointer;
+}
+
+
+#infobox-day {
+ min-height: 340px;
+ width: 600px;
+ padding: 5px;
+}
+#infobox-week {
+ min-height: 340px;
+ width: 600px;
+ padding: 5px;
+}
+
+
+.highlighted-cell {
+ filter: brightness(90%);
+}
+
+.SU, .SA {
+ filter: grayscale(25%);
+ z-index: -1;
+}
+
+.clicked {
+ filter: none;
+ filter: brightness(85%);
+ position: relative; /* need this bc filter messes w zindex */
+ z-index: 1;
+ outline: 3px solid #aaa; /* not exact bc bottom-right is the cell itself, top-left are from adjacent cells */
+ border-bottom: 1px solid transparent;
+ border-right: 1px solid transparent;
+}
+
+</style>
+
+
+
+<body>
+
+<div class='table'>
+ <div class='row'>
+  <div class='cell'><div class='inner' id='infobox-week'></div></div>
+  <div class='cell'><div class='inner' id='infobox-day'></div></div>
+ </div>
+</div>
+<div class='table' id='mytable'></div>
+
+</body>
+
+<script>
+
+
+let arr = [
+ ["WK OF CYCLE",	"ACTIVITY NO",	"ACTIVITY",	"WK OF ACTIVITY",	"SU",	"M",	"T",	"W",	"R",	"F",	"SA"],
+ ["1",	"ORDER RECEIPT",	"1",	"1",	"",	"",	"",	"",	"",	"",	""],
+ ["2",	"ORDER REVIEW",	"2",	"1",	"",	"",	"",	"",	"",	"",	""],
+ ["3",	"ORDER REVIEW",	"2",	"2",	"",	"",	"",	"",	"",	"",	""],
+ ["4",	"PRODUCTION PLANNING",	"3",	"1",	"",	"",	"",	"",	"R4",	"",	""],
+ ["5",	"PRODUCTION",	"4",	"1",	"",	"M5",	"",	"",	"R5",	"",	""],
+ ["6",	"PRODUCTION",	"4",	"2",	"",	"M6",	"",	"W6",	"R6",	"",	""],
+ ["7",	"SHIPPING",	"5",	"1",	"",	"",	"",	"",	"",	"",	""],
+ ["8",	"SHIPPING",	"5",	"2",	"",	"",	"",	"",	"",	"",	""],
+ ["9",	"SHIPPING",	"5",	"3",	"",	"",	"",	"",	"",	"",	""],
+ ["10",	"SHIPPING BUFFER",	"6",	"1",	"",	"",	"",	"",	"",	"",	""]
+];
+
+let table = document.getElementById('mytable');
+let cells = {};
+
+for (let y = 0; y < arr.length; y++) {
+ 
+ let row = document.createElement('div');
+ row.classList.add('row');
+ table.appendChild(row);
+ 
+ for (let x = 0; x < arr[0].length; x++) {
+  let cell = document.createElement('div');
+  cell.classList.add('cell');
+  
+  cell.classList.add(arr[0][x].replace(/\s/g,'-'));
+  
+  cell.id = arr[y][1] + '-' + arr[y][3] + '-' + arr[0][x];
+
+  cell.classList.add(arr[y][1].replace(/\s/g,'-'));
+  cell.setAttribute('activity', arr[y][1].replace(/\s/g,'-'));
+  cell.setAttribute('wk-of-activity', arr[y][3]);
+  cell.setAttribute('day-of-wk', arr[0][x]);
+  
+  let inner = document.createElement('div');
+  inner.classList.add('inner');
+
+  let ref = 'r' + y + 'c' + x;
+  inner.id = arr[y][1].replace(/\s/g,'-') + '-' + arr[0][x].replace(/\s/g,'-');
+  inner.innerHTML = arr[y][x];
+  
+  cell.addEventListener('click', function() {
+  
+   /*
+   let i = Array.prototype.indexOf.call(this.parentNode.childNodes, this);
+   console.log(i);
+   if (i > 0) {
+    this.parentNode.childNodes[i-1].style.borderRight = '2px solid #999';
+   }
+   */
+   
+  
+   let cells = document.getElementsByClassName('cell');
+   for (let i = 0; i < cells.length; i++) {
+    cells[i].classList.remove('clicked');
+    cells[i].classList.remove('highlighted-cell');
+   }
+  
+   cell.classList.add('clicked');  
+   getInfoAboutWeek(this.getAttribute('activity'),this.getAttribute('wk-of-activity'),this.getAttribute('day-of-wk'));
+  })
+
+  /*
+  let cellContainer = document.createElement('div');
+  cellContainer.classList.add('cell-container');
+  cellContainer.classList.add('cell');
+  cellContainer.appendChild(cell);
+  */
+
+  row.appendChild(cell);
+  cell.appendChild(inner);
+ 
+  cells[ref] = inner;
+  
+ }
+ 
+ // initialize
+ getInfoAboutWeek('ORDER-REVIEW', '1', 'SU')
+ 
+}
+
+
+
+function getInfoAboutWeek(activity, wkOfActivity, dayOfWeek) {
+
+
+
+ // HIGHLIGHT THE ROW
+ // POPULATE WEEK INFO
+ // POPULATE DAY INFO
+ // POSSIBLY STYLE OTHER DAYS
+ 
+
+ 
+ //el.classList.add('clicked');
+
+
+ 
+ let infoboxWeek = document.getElementById('infobox-week');
+ let infoboxDay = document.getElementById('infobox-day');
+ infoboxWeek.innerHTML = '';
+ infoboxDay.innerHTML = '';
+ 
+ infoboxWeek.innerHTML = "<h4>" + activity + ", week " + wkOfActivity + "</h4>";
+ 
+ switch(dayOfWeek) {
+   case 'SU':
+   infoboxDay.innerHTML = "<h4>Sunday</h4>"
+   break;
+   case 'M':
+   infoboxDay.innerHTML = "<h4>Monday</h4>"
+   break;
+   case 'T':
+   infoboxDay.innerHTML = "<h4>Tuesday</h4>"
+   break;
+   case 'W':
+   infoboxDay.innerHTML = "<h4>Wednesday</h4>"
+   break;
+   case 'R':
+   infoboxDay.innerHTML = "<h4>Thursday</h4>"
+   break;
+   case 'F':
+   infoboxDay.innerHTML = "<h4>Friday</h4>"
+   break;
+   case 'SA':
+   infoboxDay.innerHTML = "<h4>Saturday</h4>"
+   break;
+ } 
+ 
+
+ 
+ if (activity === 'ORDER-RECEIPT' && wkOfActivity === '1') {
+  
+  infoboxWeek.innerHTML += "<p>" +
+  
+   "We get all the orders."
+  
+  + "</p>";
+ 
+ }
+ 
+ 
+
+ // ORDER REVIEW WEEK
+ if (activity === 'ORDER-REVIEW' && wkOfActivity === '1') {
+  
+  infoboxWeek.innerHTML += "<p>" +
+  
+   "In this week, we shouldn't be receiving any orders. So we should operate on the basis, that as of the first day of this week, we have every order that is going to be produced and shipped for this cycle. In this week, we need to: <ol> <li> review the MOQ requiements by <span class='inline-code'>mtrl_no</span>, and <li>make adjustments to customer orders to make sure they meet the layering requirements <li> create a shipping schedule for the cycle, so everyone know what the cycle is</ol>"
+  
+  + "</p>";
+  
+  if (dayOfWeek === 'SU') {
+    infoboxDay.innerHTML += "<p>This is Sunday.</p>";
+  }
+  
+  
+ 
+ }
+ 
+ // ORDER REVIEW WEEK 2
+ if (activity === 'ORDER-REVIEW' && wkOfActivity === '2') {
+  infoboxWeek.innerHTML += 
+   "<p>We should aim to have ALL changes submitted to HSCS by EOD Friday.</p>";
+
+ }
+ 
+ 
+ // ORDER REVIEW WEEK
+ if (activity === 'PRODUCTION-PLANNING' && wkOfActivity === '1') {
+  infoboxWeek.innerHTML +=
+   + "<p>Production starts to make things. Keep an eye on what they make using <span class='inline-code'>MB51</span>.</p>"
+   + "<p>Production publishes their week-2 schedule on Thursday, too.</p>"
+   + "I can review orders for what can ship by production-week 2. i need to do that review on friday.<p>Wednesday is the last day to submit changes.</p>"
+
+  if (dayOfWeek === 'W') {
+    infoboxDay.innerHTML += "<p>Today by 11am is the DROP DEAD deadline for getting changes uploaded into SAP thru orders for production to stick to their usual process. Anything beyond this and there aren't any guarantees.</p>";
+  }
+  if (dayOfWeek === 'SU') {
+    infoboxDay.innerHTML += "<p>This is Sunday.</p>";
+  }
+  if (dayOfWeek === 'R') {
+    infoboxDay.innerHTML += "<p>By EOD, production will publish their production plan for the following week.</p><p>REVIEW MB52 V PLAN</p><p>SUBMIT CHANGES TO HSCS</p><p>REVIEW HSCS CHANGES</p><p>VMWH CAN BEGIN TO PICK SELECT ORDERS.</p>";
+    document.getElementById('PRODUCTION-1-M').classList.add('highlighted-cell');
+    document.getElementById('PRODUCTION-1-T').classList.add('highlighted-cell');
+    document.getElementById('PRODUCTION-1-W').classList.add('highlighted-cell');
+    document.getElementById('PRODUCTION-1-R').classList.add('highlighted-cell');
+    document.getElementById('PRODUCTION-1-F').classList.add('highlighted-cell');
+    
+  }
+ }
+ 
+ // PRODUCTION WEEK 1
+ if (activity === 'PRODUCTION' && wkOfActivity === '1') {
+  infoboxWeek.innerHTML += "<p>Production starts to make things. Keep an eye on what they make using <span class='inline-code'>MB51</span>. Focus on batches with manufacture dates on or after the first day of production, <span class='inline-code'>M5</span>.</p>";
+  infoboxWeek.innerHTML += "<p>On Monday, <span class='inline-code'>M5</span>, you should review the week-1 production plan, and analyze for orders which can ship by next week.</p>";
+  infoboxWeek.innerHTML += "<p>Remember not to set the GI date any earlier than Thursday of next week, <span class='inline-code'>R6</span>.</p>";
+  infoboxWeek.innerHTML += "<p>That's because next Monday, <span class='inline-code'>M6</span>, will be the full review of week-1 plan vs production. The process of analysis & revision requests by <span class='inline-code'>VMGC</span>, changes by <span class='inline-code'>HSCS</span>, and audit of changes by <span class='inline-code'>VMGC</span> should take 2 days. That means <span class='inline-code'>VMWH</span> can start picking by next Wednesday, <span class='inline-code'>W6</span>, at the earliest.</p>";
+  
+  infoboxWeek.innerHTML += "<p>Anyhow, production publishes their week-2 schedule on Thursday, <span class='inline-code'>R5</span>.</p>";
+  
+  if (dayOfWeek === 'SU') {
+    infoboxDay.innerHTML += "<p>This is Sunday.</p>";
+  }
+  if (dayOfWeek === 'R') {
+    infoboxDay.innerHTML += "<p>This is Thursday. By EOD, production will publish their plan for week 2 production.</p>";
+    document.getElementById('PRODUCTION-2-M').classList.add('highlighted-cell');
+    document.getElementById('PRODUCTION-2-T').classList.add('highlighted-cell');
+    document.getElementById('PRODUCTION-2-W').classList.add('highlighted-cell');
+    document.getElementById('PRODUCTION-2-R').classList.add('highlighted-cell');
+    document.getElementById('PRODUCTION-2-F').classList.add('highlighted-cell'); 
+  }
+ }
+ 
+ // PRODUCTION WEEK 2
+ if (activity === 'PRODUCTION' && wkOfActivity === '2') {
+  infoboxWeek.innerHTML += "<p>" +
+   "Production makes things."
+  + "</p>";
+  if (dayOfWeek === 'SU') {
+    infoboxDay.innerHTML += "<p>This is Sunday.</p>";
+  }
+  if (dayOfWeek === 'R') {
+    infoboxDay.innerHTML += "<p>This is the earliest we can reasonably expect to ship anything in the cycle.</p>";
+  }
+  if (dayOfWeek === 'R') {
+    infoboxDay.innerHTML += "<p>This is Thursday. By EOD, production will publish their plan for week 2 production.</p>";
+  }
+ }
+ 
+}
+
+
+
+
+</script>
