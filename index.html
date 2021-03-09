@@ -1,3 +1,7 @@
+<html>
+
+<!-- version-2021-03-08-0959 -->
+
 
 <style>
 
@@ -110,6 +114,22 @@ html, body {
  border-right: 1px solid transparent;
 }
 
+.day-reference {
+ font-family: monospace;
+ text-align: center;
+ width: 50px;
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
 </style>
 
 
@@ -118,8 +138,8 @@ html, body {
 
 <div class='table'>
  <div class='row'>
-  <div class='cell'><div class='inner' id='infobox-week'></div></div>
-  <div class='cell'><div class='inner' id='infobox-day'></div></div>
+  <div class='cell'><div class='inner noselect' id='infobox-week'></div></div>
+  <div class='cell'><div class='inner noselect' id='infobox-day'></div></div>
  </div>
 </div>
 <div class='table' id='mytable'></div>
@@ -128,13 +148,12 @@ html, body {
 
 <script>
 
-
 let arr = [
  ["WK OF CYCLE",	"ACTIVITY NO",	"ACTIVITY",	"WK OF ACTIVITY",	"SU",	"M",	"T",	"W",	"R",	"F",	"SA"],
- ["1",	"ORDER RECEIPT",	"1",	"1",	"",	"",	"",	"",	"",	"",	""],
- ["2",	"ORDER REVIEW",	"2",	"1",	"",	"",	"",	"",	"",	"",	""],
- ["3",	"ORDER REVIEW",	"2",	"2",	"",	"",	"",	"",	"",	"",	""],
- ["4",	"PRODUCTION PLANNING",	"3",	"1",	"",	"",	"",	"",	"R4",	"",	""],
+ ["1",	"ORDER RECEIPT", "1", "1", "", "", "", "", "", "F1", ""],
+ ["2",	"ORDER REVIEW",	"2", "1",	"",	"",	"",	"",	"",	"",	""],
+ ["3",	"ORDER REVIEW",	"2", "2",	"",	"",	"",	"",	"",	"F3",	""],
+ ["4",	"PRODUCTION PLANNING", "3", "1", "", "M4", "T4",	"W4",	"R4",	"",	""],
  ["5",	"PRODUCTION",	"4",	"1",	"",	"M5",	"",	"",	"R5",	"",	""],
  ["6",	"PRODUCTION",	"4",	"2",	"",	"M6",	"",	"W6",	"R6",	"",	""],
  ["7",	"SHIPPING",	"5",	"1",	"",	"",	"",	"",	"",	"",	""],
@@ -157,6 +176,7 @@ for (let y = 0; y < arr.length; y++) {
   cell.classList.add('cell');
   
   cell.classList.add(arr[0][x].replace(/\s/g,'-'));
+  cell.classList.add('noselect');
   
   cell.id = arr[y][1] + '-' + arr[y][3] + '-' + arr[0][x];
 
@@ -170,7 +190,13 @@ for (let y = 0; y < arr.length; y++) {
 
   let ref = 'r' + y + 'c' + x;
   inner.id = arr[y][1].replace(/\s/g,'-') + '-' + arr[0][x].replace(/\s/g,'-');
+  
+  if (x > 3 & y > 0) {
+    inner.classList.add('day-reference');
+  }
+
   inner.innerHTML = arr[y][x];
+
   
   cell.addEventListener('click', function() {
   
@@ -202,6 +228,12 @@ for (let y = 0; y < arr.length; y++) {
 
   row.appendChild(cell);
   cell.appendChild(inner);
+  
+  // HIGHLIGHT THE CELL I WANT TO INITIALIZE
+  if (arr[y][1] === "ORDER REVIEW" && arr[y][3] === "1" && arr[0][x] === "SU") {
+   cell.classList.add('clicked');
+  }
+  
  
   cells[ref] = inner;
   
@@ -216,18 +248,10 @@ for (let y = 0; y < arr.length; y++) {
 
 function getInfoAboutWeek(activity, wkOfActivity, dayOfWeek) {
 
-
-
  // HIGHLIGHT THE ROW
  // POPULATE WEEK INFO
  // POPULATE DAY INFO
  // POSSIBLY STYLE OTHER DAYS
- 
-
- 
- //el.classList.add('clicked');
-
-
  
  let infoboxWeek = document.getElementById('infobox-week');
  let infoboxDay = document.getElementById('infobox-day');
@@ -261,27 +285,25 @@ function getInfoAboutWeek(activity, wkOfActivity, dayOfWeek) {
  } 
  
 
- 
+ // ORDER RECEIPT
  if (activity === 'ORDER-RECEIPT' && wkOfActivity === '1') {
   
-  infoboxWeek.innerHTML += "<p>" +
+  infoboxWeek.innerHTML += "<p>We get all the orders this week.</p>";
+  infoboxWeek.innerHTML += "<p>Last day to receive orders is Friday, <span class='inline-code'>F1</span>.</p>";
   
-   "We get all the orders."
-  
-  + "</p>";
+  if (dayOfWeek === 'F') {
+    infoboxDay.innerHTML += "<p>This is really the last day to receive orders for the current cycle.</p>";
+  }
  
  }
  
  
 
- // ORDER REVIEW WEEK
+ // ORDER REVIEW WEEK 1
  if (activity === 'ORDER-REVIEW' && wkOfActivity === '1') {
   
-  infoboxWeek.innerHTML += "<p>" +
-  
-   "In this week, we shouldn't be receiving any orders. So we should operate on the basis, that as of the first day of this week, we have every order that is going to be produced and shipped for this cycle. In this week, we need to: <ol> <li> review the MOQ requiements by <span class='inline-code'>mtrl_no</span>, and <li>make adjustments to customer orders to make sure they meet the layering requirements <li> create a shipping schedule for the cycle, so everyone know what the cycle is</ol>"
-  
-  + "</p>";
+   infoboxWeek.innerHTML += "<p>We have all the orders for the cycle.</p>"
+   infoboxWeek.innerHTML += "<p>In this week, we need to: <ol> <li> review the <span class='inline-code'>MOQ</span> requiements by <span class='inline-code'>mtrl_no</span>, and <li>make adjustments to customer orders to make sure they meet the layering requirements <li> create a shipping schedule for the cycle, so everyone know what the cycle is</ol></p>";
   
   if (dayOfWeek === 'SU') {
     infoboxDay.innerHTML += "<p>This is Sunday.</p>";
@@ -293,18 +315,26 @@ function getInfoAboutWeek(activity, wkOfActivity, dayOfWeek) {
  
  // ORDER REVIEW WEEK 2
  if (activity === 'ORDER-REVIEW' && wkOfActivity === '2') {
-  infoboxWeek.innerHTML += 
-   "<p>We should aim to have ALL changes submitted to HSCS by EOD Friday.</p>";
+  infoboxWeek.innerHTML += "<p>We should aim to have all order changes submitted to <span class='inline-code'>HSCS</span> by EOD Friday, <span class='inline-code'>F3</span>.</p>";
+  infoboxWeek.innerHTML += "<p>The reason is that production will make their week-1 plan next Wednesday, <span class='inline-code'>W4</span>, and we want some buffer to verify the changes requested by <span class='inline-code'>VMGC</span> and made by <span class='inline-code'>HSCS</span> before that plan is published.</p>";
+  
+  if (dayOfWeek === 'F') {
+    infoboxDay.innerHTML += "<p>By EOD, <span class='inline-code'>VMGC</span> should have all the orders in their final form.</p>";
+	infoboxDay.innerHTML += "<p>All skus should meet MOQs.</p>";
+	infoboxDay.innerHTML += "<p>All items on orders should meet layering requirements.</p>";
+	infoboxDay.innerHTML += "<p>This will be the last day for <span class='inline-code'>VMGC</span> to submit the required changes to <span class='inline-code'>HSCS</span>.</p>";
+  }
 
  }
  
  
- // ORDER REVIEW WEEK
+ // PRODUCTION PLANNING WEEK 1
  if (activity === 'PRODUCTION-PLANNING' && wkOfActivity === '1') {
-  infoboxWeek.innerHTML +=
-   + "<p>Production starts to make things. Keep an eye on what they make using <span class='inline-code'>MB51</span>.</p>"
-   + "<p>Production publishes their week-2 schedule on Thursday, too.</p>"
-   + "I can review orders for what can ship by production-week 2. i need to do that review on friday.<p>Wednesday is the last day to submit changes.</p>"
+ 
+   infoboxWeek.innerHTML += "<p>Final changes to orders should have been sent by last Friday, <span class='inline-code'>F3</span>, leaving Monday, <span class='inline-code'>M4</span>, for <span class='inline-code'>HSCS</span> to do the final changes, and Tuesday, <span class='inline-code'>T4</span>, for <span class='inline-code'>VMGC</span> to review the changes.</p>";
+   infoboxWeek.innerHTML += "<p>On Wednesday, <span class='inline-code'>W4</span>, production will make their production plan for the following week.</p>";
+   infoboxWeek.innerHTML += "<p>They publish that production plan on Thursday, <span class='inline-code'>R4</span>.</p>";
+
 
   if (dayOfWeek === 'W') {
     infoboxDay.innerHTML += "<p>Today by 11am is the DROP DEAD deadline for getting changes uploaded into SAP thru orders for production to stick to their usual process. Anything beyond this and there aren't any guarantees.</p>";
@@ -347,11 +377,15 @@ function getInfoAboutWeek(activity, wkOfActivity, dayOfWeek) {
  
  // PRODUCTION WEEK 2
  if (activity === 'PRODUCTION' && wkOfActivity === '2') {
-  infoboxWeek.innerHTML += "<p>" +
-   "Production makes things."
-  + "</p>";
+  infoboxWeek.innerHTML += "<p>Production makes things.</p>";
+  infoboxWeek.innerHTML += "<p>Everyday, compare <span class='inline-code'>open_orders</span>: <span class='inline-code'>intended delivery cases</span> vs <span class='inline-code'>mb52</span>* by <span class='inline-code'>mtrl_no</p><ul><li>if 0, green: do nothing <li> if small, yellow: order changes to <span class='inline-code'>HSCS</span> <li> if big, red: send to <span class='inline-code'>PROD</span> for details</ul></p>";
+  infoboxWeek.innerHTML += "<p>Start moving dates.</p>";
+  
+  infoboxWeek.innerHTML += "<p>*in lieu of <span class='inline-code'>mb52</span>, use EWM + mb51</p>";
+  
   if (dayOfWeek === 'SU') {
     infoboxDay.innerHTML += "<p>This is Sunday.</p>";
+	
   }
   if (dayOfWeek === 'R') {
     infoboxDay.innerHTML += "<p>This is the earliest we can reasonably expect to ship anything in the cycle.</p>";
@@ -363,7 +397,5 @@ function getInfoAboutWeek(activity, wkOfActivity, dayOfWeek) {
  
 }
 
-
-
-
 </script>
+</html>
